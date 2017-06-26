@@ -144,7 +144,10 @@ const CGFloat AIRMapZoomBoundBuffer = 0.01;
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wobjc-missing-super-calls"
 - (NSArray<id<RCTComponent>> *)reactSubviews {
-  return _reactSubviews;
+    // JT: This seems very hacky, but it stops the callout from being obscured by adjacent image markers
+    // Maybe React is interfering with ordering or zIndex when it can access these subviews?
+    return [[NSArray<id<RCTComponent>> alloc] init];
+  //return _reactSubviews;
 }
 #pragma clang diagnostic pop
 
@@ -153,6 +156,10 @@ const CGFloat AIRMapZoomBoundBuffer = 0.01;
 // override UIGestureRecognizer's delegate method so we can prevent MKMapView's recognizer from firing
 // when we interact with UIControl subclasses inside our callout view.
 - (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch {
+    // JT: Ensure annotations/pins are included in this
+    if ([touch.view isKindOfClass:[AIRMapMarker class]] || [touch.view isKindOfClass:[MKPinAnnotationView class]]) {
+        return NO;
+    }
     if ([touch.view isDescendantOfView:self.calloutView])
         return NO;
     else
